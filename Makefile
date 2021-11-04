@@ -1,0 +1,2 @@
+all:
+	gplc main.pl
