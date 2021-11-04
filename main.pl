@@ -8,16 +8,16 @@
 main :-
   findall(
     N,
-    (between(3, 6, I), length(G, I), maplist(axiom, G, N), cg(_, N, T), T=node('S' by _, _), freeze(G)),
+    (between(3, 4, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
     NS
   ),
   concurrent_maplist(
-    parse(cg, 16),
+    parse(cg(3)),
     NS,
     TS
   ),
   concurrent_maplist(
-    parse(iqccg, 16),
+    iparse(iqccg(3)),
     NS,
     US
   ),
@@ -37,8 +37,8 @@ main :-
 
 main :-
   forall(
-    (between(3, 6, I), length(G, I), maplist(axiom, G, N), cg(_, N, T), T=node('S' by _, _), freeze(G)),
-    (write_chars(80, '='), nl, draw_tree(T), parse(iqccg, 16, N, U), U=node('S' by _, _), draw_tree(U))
+    (between(3, 4, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
+    (write_chars(80, '='), nl, draw_tree(T), iparse(qccg(3), N, U), U=node('S' by _, _), draw_tree(U))
   ),
   halt.
 

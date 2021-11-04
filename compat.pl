@@ -5,6 +5,8 @@
 write_length(X, N, _) :-
   write_to_atom(A, X),
   atom_length(A, N).
+foldl(_,[],V,V).
+foldl(Goal,[H|T],V0,V) :- call(Goal,H,V0,V1),foldl(Goal,T,V1,V).
 append([], []).
 append([L|Ls], As) :-
   append(L, Ws, As),
