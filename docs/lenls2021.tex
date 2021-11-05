@@ -1,0 +1,270 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Szeged}
+\usecolortheme{beaver}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{multirow}
+\usepackage{biblatex}
+\usepackage{bussproofs}\EnableBpAbbreviations
+\usepackage[linguistics]{forest}
+\usepackage{gb4e}\noautomath
+\title{Incremental derivations with Q Combinator in CCG \thanks{This study is supported by Grant-Aid for JSPS Fellows Number 21J15207.}}
+\author{Masaya Taniguchi (taniguchi@jaist.ac.jp) \and Satoshi Tojo (tojo@jaist.ac.jp)}
+\bibliography{reference}
+\begin{document}
+\maketitle
+\begin{frame}[t]
+	\frametitle{Introduction}
+	\framesubtitle{Incremental Parsing}
+	\only<1>{
+		The \textit{incremental parsing} is a strategy for parsing a sentence from a head.
+		\begin{itemize}
+			\item We obtain a parsing tree even if the sentence is in progress.
+			\item We predict what category comes next.
+		\end{itemize}
+	}
+	\only<2>{
+		\begin{block}{Question}
+			Does there exist an incremental parsing tree for all sentences?
+		\end{block}
+	}
+	\begin{figure}[htb]
+		\begin{minipage}{0.40\linewidth}
+			\resizebox{\textwidth}{!}{
+				\begin{forest}
+					[,phantom,s sep=1.0cm
+					[$S$
+					[$NP$ [I,tier=word]]
+						[$NP\backslash S$
+							[$(NP\backslash S)/NP$
+									[talk with,roof,tier=word]]
+								[$NP$ [you,tier=word]]
+						]
+					]
+					[$S$
+					[$S/NP$
+							[$S$
+									[I talk,roof,tier=word]
+								]
+								[$S\backslash (S/NP)$ [with,tier=word]]
+						]
+						[$NP$ [you,tier=word]]
+					]
+					]
+				\end{forest}
+			}
+			\caption{\footnotesize\mbox{Variations of Parsing Tree}}\label{fig:nondet}
+		\end{minipage}
+		\begin{minipage}{0.40\linewidth}
+			\resizebox{\textwidth}{!}{
+				\begin{forest}
+					[,phantom,s sep=1.0cm
+					[,phantom
+					[$NP$,tier=label [I,tier=word]]
+					[$(NP\backslash S)/NP$,tier=label
+					[talk with,roof,tier=word]]
+					[$?$,tier=label [?,tier=word]]
+					]
+					[$S$
+					[$S/NP$
+					[$S$
+					[$NP$,tier=label [I,tier=word]]
+					[$NP\backslash S$ [talk,tier=word]]
+					]
+					[$S\backslash (S/NP)$ [with,tier=word]]
+					]
+					[$NP$ [?,tier=word]]
+					]
+					]
+				\end{forest}
+			}
+			\caption{\footnotesize\mbox{Incomplete sentence}}\label{fig:incomp}
+		\end{minipage}
+	\end{figure}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Introduction}
+	\framesubtitle{Categorial Grammar}
+	\begin{definition}[Categorial Grammar (CG)\footfullcite{steedman1993categorial}]
+		The lexicon is a map from a word to a category,
+		which is atomic \(X\) or functional \(X/Y, X\backslash Y\).
+		The deduction rules are only application rules.
+		\begin{align*}
+			X/Y\quad Y            & \Rightarrow_{>} X &
+			X\quad  X\backslash Y & \Rightarrow_{<} Y
+		\end{align*}
+	\end{definition}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Introduction}
+	\framesubtitle{Combinatory Categorial Grammar}
+	\begin{definition}[Combinatory Categorial Grammar (CCG)\footfullcite{steedman2000syntactic}]
+		The lexicon is a map from a word to a category,
+		which is atomic \(X\) or functional \(X/Y, X\backslash Y\).
+		The deduction rules are as follows.
+		\begin{align*}
+			X/Y\quad Y                        & \Rightarrow_{>} X                    &
+			Y                                 & \Rightarrow_{>T} (X/Y)\backslash X     \\
+			X\quad  X\backslash Y             & \Rightarrow_{<} Y                    &
+			X                                 & \Rightarrow_{<T} Y / (X\backslash Y)   \\
+			X/Y\quad  Y/Z                     & \Rightarrow_{>B} X/Z                 &
+			X\backslash Y\quad  Y\backslash Z & \Rightarrow_{<B} X\backslash Z         \\
+			X/Y\quad  Z\backslash Y           & \Rightarrow_{>Bx} Z\backslash X      &
+			X/Y\quad  X\backslash Z           & \Rightarrow_{<Bx} Z/Y
+		\end{align*}
+	\end{definition}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Introduction}
+	\framesubtitle{Left-recursive Derivation}
+	In the CG rules, the following is the parsing tree of ``Alice talks with Bob.''
+	\begin{prooftree}
+		\AXC{\(NP: Alice\)}
+		\AXC{\(NP\backslash S: talk\)}
+		\RL{\(>\)}
+		\BIC{\(S:talk\,Alice\)}
+		\AXC{\((S\backslash S)/NP: with\)}
+		\AXC{\(NP: Bob\)}
+		\RL{\(<\)}
+		\BIC{\(S\backslash S:with\,Bob\)}
+		\RL{\(>\)}
+		\BIC{\(S:with\,Bob\,(talk\,Alice)\)}
+	\end{prooftree}
+	We employ the type-raising rules to construct a parsing tree.
+	\begin{prooftree}
+		\AXC{\(NP: Alice\)}
+		\AXC{\(NP\backslash S: talk\)}
+		\RL{\(<\)}
+		\BIC{\(S:talk\,Alice\)}
+		\RL{\(<T\)}
+		\UIC{\(S/(S\backslash S):\lambda x.x\,(talk\,Alice)\)}
+		\AXC{\((S\backslash S)/NP: with\)}
+		\RL{\(>B\)}
+		\BIC{\(S/NP:\lambda x.with\,x\,(talk\,Alice)\)}
+		\AXC{\(NP: Bob\)}
+		\RL{\(>\)}
+		\BIC{\(S:with\,Bob\,(talk\,Alice)\)}
+	\end{prooftree}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Experiments: Left-recursive Derivation}
+	In CG, there are no left-recursive derivations for the following categories.
+	\begin{prooftree}
+		\AXC{\(X/Z\)}
+		\AXC{\(Z/Y\)}
+		\AXC{\(Y\)}
+		\RL{\(>\)}
+		\BIC{\(Z\)}
+		\RL{\(>\)}
+		\BIC{\(X\)}
+	\end{prooftree}
+	In CCG, there are no left-recursive derivations for the following categories.
+	\begin{prooftree}
+		\AXC{\(W/X\)}
+		\AXC{\((X/Y)/Z\)}
+		\AXC{\(Z\)}
+		\RL{\(>\)}
+		\BIC{\(X/Y\)}
+		\AXC{\(Y\)}
+		\RL{\(>\)}
+		\BIC{\(X\)}
+		\RL{\(>\)}
+		\BIC{\(W\)}
+	\end{prooftree}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Experiments: Left-recursive Derivation}
+	CG is of course not enough to parse a sentence incrementally. \\
+	Further, CCG is still not enough to parse a sentence incrementally.
+	\begin{table}[htpb]
+		\centering
+		\caption{Number of Accepted Sentences}
+		\label{tab:icg-iccg}
+		\begin{tabular}{c|ccccc}
+			Grammar \textbackslash Number of Words & 2 & 3 & 4  & 5   & 6    \\
+			\hline\hline
+			Non-incremental CG                     & 2 & 8 & 48 & 384 & 3840 \\
+			\hline
+			Incremental CG                         & 2 & 4 & -  & -   & -    \\
+			Incremental CCG                        & 2 & 8 & 46 & -   & -    \\
+		\end{tabular}
+	\end{table}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{D Combinator and Q Combinator}
+	\only<1>{
+		Moortgat \footfullcite{moortgat1988mixed} and Hefny \footfullcite{hefny2011incremental} employed a new combinator \(D\) from the combinator \(B\).
+		\begin{align*}
+			 & X/Y &  & \alert{Y/Z} &  & \Rightarrow_{>B} &  & X/Z                 \\
+			 & X/Y &  &             &  & \Rightarrow_{>D} &  & (X/Z)/(\alert{Y/Z}) \\
+		\end{align*}
+	}
+	\only<2>{
+		As the same way, we employ a new combinator \(Q\).
+		\begin{align*}
+			 & \alert{X/Y} &  & Y/Z &  & \Rightarrow_{>B} &  & X/Z                           \\
+			 &             &  & Y/Z &  & \Rightarrow_{>Q} &  & (\alert{X/Y})\backslash (X/Z)
+		\end{align*}
+		We also consider other combinators \(<Q\), \(>Qx\), and \(<Qx\) for \(<B\), \(>Bx\), and \(<Bx\).
+	}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Q Combinator Combinatory Categorial Grammar}
+	We add new rules \(D\) and \(Q\) for \(B\).
+	Moreover, we also add new rules \(Dx\) and \(Qx\) for \(Bx\).
+	\begin{align*}
+		X/Y\quad Y                        & \Rightarrow_{>} X                                          &
+		Y                                 & \Rightarrow_{>T} (X/Y)\backslash X                           \\
+		X\quad  X\backslash Y             & \Rightarrow_{<} Y                                          &
+		X                                 & \Rightarrow_{<T} Y / (X\backslash Y)                         \\
+		X/Y\quad  Y/Z                     & \Rightarrow_{>B} X/Z                                       &
+		X/Y                               & \Rightarrow_{>D} (X/Z)/(Y/Z)                               &
+		X/Y                               & \Rightarrow_{>Q} (Z/X)\backslash (Z/Y)                       \\
+		X\backslash Y\quad  Y\backslash Z & \Rightarrow_{<B} X\backslash Z                             &
+		X\backslash Y                     & \Rightarrow_{<D} (Z\backslash X)\backslash (Z\backslash Y) &
+		X\backslash Y                     & \Rightarrow_{<Q} (X\backslash Z)/(Y\backslash Z)             \\
+		X/Y\quad  Z\backslash Y           & \Rightarrow_{>Bx} Z\backslash X                            &
+		X/Y                               & \Rightarrow_{>Dx} (Z\backslash X)/(Z\backslash Y)          &
+		X\backslash Y                     & \Rightarrow_{>Qx} (Z/Y) \backslash (X\backslash Z)           \\
+		X/Y\quad  X\backslash Z           & \Rightarrow_{<Bx} Z/Y                                      &
+		X\backslash Y                     & \Rightarrow_{<Dx} (X/Z)\backslash (Y/Z)                    &
+		X/Y                               & \Rightarrow_{<Qx} (Z/Y)/(X\backslash Z)
+	\end{align*}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Experiments: Left-recursive Derivation (Revisit)}
+	CG is of course not enough to parse a sentence incrementally. \\
+	Further, CCG is still not enough to parse a sentence incrementally. \\
+	\textbf{QCCG can parse any sentences generated by CG incrementally}.
+	\begin{table}[htpb]
+		\centering
+		\caption{Number of Accepted Sentences}
+		\label{tab:icg-iccg-iqccg}
+		\begin{tabular}{c|ccccc}
+			Grammar \textbackslash Number of Words & 2 & 3 & 4  & 5   & 6    \\
+			\hline\hline
+			Non-incremental CG                     & 2 & 8 & 48 & 384 & 3840 \\
+			\hline
+			Incremental CG                         & 2 & 4 & -  & -   & -    \\
+			Incremental CCG                        & 2 & 8 & 46 & -   & -    \\
+			Incremental QCCG                       & 2 & 8 & 48 & 384 & 3840 \\
+		\end{tabular}
+	\end{table}
+	\alert{
+		Note that we used the exhaustive search algorithm to find an left-recursive derivation.
+	}
+\end{frame}
+\begin{frame}[t]
+	\frametitle{Conclusion}
+	\begin{itemize}
+		\item We proved the existence of the incremental derivations.
+		\item We only show the transformation of left-recursive derivation if it has only the binary rules \(<\) and \(>\). We have not given a translation from a QCCG derivation to a QCCG derivation, which is still open. This is our immediate future task.
+		\item We expect to build a treebank that consists of the incremental derivation with our algorithm from an existing treebank.
+		\item We implement an incremental CCG parser, in addition to  the current translation.
+		\item All the left-recursive derivations are available on \texttt{https://git.io/lenls2021-qccg.txt}
+	\end{itemize}
+\end{frame}
+
+\end{document}

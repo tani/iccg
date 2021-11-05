@@ -45,7 +45,7 @@ main :-
 main :-
   forall(
     (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
-    (write_chars(80, '='), nl, draw_tree(T), ilparse(qccg(3), N, U), U=node('S' by _, _), draw_tree(U))
+    (write_chars(80, '='), nl, draw_tree(T), ilparse(ccg(3), N, U), U=node('S' by _, _), draw_tree(U))
   ),
   halt.
 
