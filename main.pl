@@ -8,16 +8,16 @@
 main :-
   findall(
     N,
-    (between(3, 4, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
+    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
     NS
   ),
   concurrent_maplist(
-    parse(cg(3)),
+    parse(cg(_)),
     NS,
     TS
   ),
   concurrent_maplist(
-    iparse(iqccg(3)),
+    ilparse(qccg(3)),
     NS,
     US
   ),
@@ -33,12 +33,19 @@ main :-
   ),
   halt.
 
+%main :-
+%  forall(
+%    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
+%    (write_chars(80, '='), nl, draw_tree(T), U=node('S' by _, _), iparse(qccg(3), N, U), draw_tree(U))
+%  ),
+%  halt.
+
 :- else.
 
 main :-
   forall(
-    (between(3, 4, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
-    (write_chars(80, '='), nl, draw_tree(T), iparse(qccg(3), N, U), U=node('S' by _, _), draw_tree(U))
+    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
+    (write_chars(80, '='), nl, draw_tree(T), ilparse(qccg(3), N, U), U=node('S' by _, _), draw_tree(U))
   ),
   halt.
 

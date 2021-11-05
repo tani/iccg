@@ -2,33 +2,57 @@
 :- op(600, xfx, \).
 :- op(700, xfx, by).
 
+foldll(_, V, [], V).
+foldll(F, V0, [X|XS], V) :-
+  call(F, V0, X, Y),
+  foldll(F, Y, XS, V).
+
+foldrr(F, [X, Y], Z) :- !,
+  call(F, X, Y, Z).
+foldrr(F, L, V0) :-
+  append(XS, [X], L),
+  call(F, Y, X, V0),
+  foldrr(F, XS, Y).
+
+:- if(current_prolog_flag(dialect, swi)).
 iparse(Grammar, XS, T) :-
-  XS = [HD|TL],
-  foldl(Grammar, TL, HD, T),
+  first_solution(T, [
+    ilparse(Grammar, XS, T),
+    irparse(Grammar, XS, T)
+  ], []).
+:-endif.
+
+irparse(Grammar, XS, T) :-
+  T = node(_ by _, _),
+  foldrr(Grammar, XS, T),
+  acyclic_term(T).
+
+ilparse(Grammar, [X|XS], T) :-
+  foldll(Grammar, X, XS, T),
   acyclic_term(T).
 
 parse(_, [T], T).
 parse(Grammar, XS, T) :-
   append([HD, [X, Y], TL], XS),
-  call(Grammar, Y, X, Z),
+  call(Grammar, X, Y, Z),
   append([HD, [Z], TL], YS),
   parse(Grammar, YS, T).
 
-qccg(N, B, A, C) :-
+qccg(N, A, B, C) :-
   between(0, N, I),
   unary(I, A, X, [ruleT, ruleD, ruleDx, ruleQ, ruleQx]),
   between(0, N, J),
   unary(J, B, Y, [ruleT, ruleD, ruleDx, ruleQ, ruleQx]),
   binary(X, Y, C, [ruleA, ruleB, ruleBx]).
 
-ccg(N, B, A, C) :-
+ccg(N, A, B, C) :-
   between(0, N, I),
   unary(I, A, X, [ruleT]),
   between(0, N, J),
   unary(J, B, Y, [ruleT]),
   binary(X, Y, C, [ruleA, ruleB, ruleBx]).
 
-cg(_, B, A, C) :-
+cg(_, A, B, C) :-
   binary(A, B, C, [ruleA]).
 
 unary(0, A, A, _) :- !.
