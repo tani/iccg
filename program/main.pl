@@ -5,19 +5,24 @@
 
 :- if(current_prolog_flag(dialect, swi)).
 
+root(node('S' by _, _)).
+
 main :-
   findall(
     N,
-    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
+    (between(3, 5, I), length(G, I), maplist(axiom, G, N), T=node('S' by _, _), parse(cg, 1, N, T), freeze(G)),
     NS
   ),
   concurrent_maplist(
-    parse(cg(_)),
+    parse(cg, 1),
     NS,
     TS
   ),
+  length(NS, N),
+  length(US, N),
+  concurrent_maplist(root, US),
   concurrent_maplist(
-    ilparse(qccg(3)),
+    iparse2(qccg, 8),
     NS,
     US
   ),
@@ -35,8 +40,8 @@ main :-
 
 %main :-
 %  forall(
-%    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
-%    (write_chars(80, '='), nl, draw_tree(T), U=node('S' by _, _), iparse(qccg(3), N, U), draw_tree(U))
+%    (between(3, 4, I), length(G, I), maplist(axiom, G, N), T=node('S' by _, _), parse(cg, 1, N, T), freeze(G)),
+%    (write_chars(80, '='), nl, draw_tree(T), U=node('S' by _, _), iparse5(qccg, 8, N, U), draw_tree(U))
 %  ),
 %  halt.
 
@@ -44,8 +49,8 @@ main :-
 
 main :-
   forall(
-    (between(3, 5, I), length(G, I), maplist(axiom, G, N), parse(cg(_), N, T), T=node('S' by _, _), freeze(G)),
-    (write_chars(80, '='), nl, draw_tree(T), ilparse(ccg(3), N, U), U=node('S' by _, _), draw_tree(U))
+    (between(3, 4, I), length(G, I), maplist(axiom, G, N), T=node('S' by _, _), parse(cg, 1, N, T), freeze(G)),
+    (write_chars(80, '='), nl, draw_tree(T), U=node('S' by _, _), iparse2(qccg, 8, N, U), draw_tree(U))
   ),
   halt.
 

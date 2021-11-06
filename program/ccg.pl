@@ -2,41 +2,87 @@
 :- op(600, xfx, \).
 :- op(700, xfx, by).
 
-foldll(_, V, [], V).
-foldll(F, V0, [X|XS], V) :-
-  call(F, V0, X, Y),
-  foldll(F, Y, XS, V).
-
-foldrr(F, [X, Y], Z) :- !,
-  call(F, X, Y, Z).
-foldrr(F, L, V0) :-
-  append(XS, [X], L),
-  call(F, Y, X, V0),
-  foldrr(F, XS, Y).
-
 :- if(current_prolog_flag(dialect, swi)).
-iparse(Grammar, XS, T) :-
+iparse5(Grammar, N, XS, T) :-
   first_solution(T, [
-    ilparse(Grammar, XS, T),
-    irparse(Grammar, XS, T)
+    iparse2(Grammar, N, XS, T),
+    iparse3(Grammar, N, XS, T),
+    iparse4(Grammar, N, XS, T)
   ], []).
-:-endif.
+:- endif.
 
-irparse(Grammar, XS, T) :-
-  T = node(_ by _, _),
-  foldrr(Grammar, XS, T),
+iparse4(_, _, [T], T) :-
   acyclic_term(T).
+iparse4(Grammar, N, [X, Y|XS], T) :-
+  call(Grammar, Rule1, Rule2),
+  between(0, N, I_),
+  I is N - I_,
+  between(0, I, P),
+  unary(P, X, A, Rule1),
+  M is N - I,
+  between(0, M, J_),
+  J is M - J_,
+  between(0, J, Q),
+  unary(Q, Y, B, Rule1),
+  K is M - J,
+  binary(A, B, C, Rule2),
+  iparse4(Grammar, K, [C|XS], T).
 
-ilparse(Grammar, [X|XS], T) :-
-  foldll(Grammar, X, XS, T),
+iparse3(_, _, [T], T) :-
   acyclic_term(T).
+iparse3(Grammar, N, [X, Y|XS], T) :-
+  call(Grammar, Rule1, Rule2),
+  between(0, N, I_),
+  I is N - I_,
+  unary(I, X, A, Rule1),
+  M is N - I,
+  between(0, M, J_),
+  J is M - J_,
+  unary(J, Y, B, Rule1),
+  K is M - J,
+  binary(A, B, C, Rule2),
+  iparse3(Grammar, K, [C|XS], T).
 
-parse(_, [T], T).
-parse(Grammar, XS, T) :-
+iparse2(_, _, [T], T) :-
+  acyclic_term(T).
+iparse2(Grammar, N, [X, Y|XS], T) :-
+  call(Grammar, Rule1, Rule2),
+  between(0, N, I),
+  unary(I, X, A, Rule1),
+  M is N - I,
+  between(0, M, J),
+  unary(J, Y, B, Rule1),
+  K is M - J,
+  binary(A, B, C, Rule2),
+  iparse2(Grammar, K, [C|XS], T).
+
+iparse1(_, _, [T], T) :-
+  acyclic_term(T).
+iparse1(Grammar, N, [X, Y|XS], T) :-
+  call(Grammar, Rule1, Rule2),
+  between(0, N, I),
+  unary(I, X, A, Rule1),
+  between(0, N, J),
+  unary(J, Y, B, Rule1),
+  binary(A, B, C, Rule2),
+  iparse1(Grammar, N, [C|XS], T).
+
+parse(_, _, [T], T) :-
+  acyclic_term(T).
+parse(Grammar, N, XS, T) :-
   append([HD, [X, Y], TL], XS),
-  call(Grammar, X, Y, Z),
-  append([HD, [Z], TL], YS),
-  parse(Grammar, YS, T).
+  call(Grammar, Rule1, Rule2),
+  between(0, N, I),
+  unary(I, X, A, Rule1),
+  between(0, N, J),
+  unary(J, Y, B, Rule1),
+  binary(A, B, C, Rule2),
+  append([HD, [C], TL], YS),
+  parse(Grammar, N, YS, T).
+
+qccg([ruleT, ruleD, ruleDx, ruleQ, ruleQ], [ruleA, ruleB, ruleBx]).
+ccg([ruleT], [ruleA, ruleB, ruleBx]).
+cg([], [ruleA]).
 
 qccg(N, A, B, C) :-
   between(0, N, I),
