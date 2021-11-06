@@ -80,7 +80,7 @@ parse(Grammar, N, XS, T) :-
   append([HD, [C], TL], YS),
   parse(Grammar, N, YS, T).
 
-qccg([ruleT, ruleD, ruleDx, ruleQ, ruleQ], [ruleA, ruleB, ruleBx]).
+qccg([ruleT, ruleD, ruleDx, ruleQ, ruleQx], [ruleA, ruleB, ruleBx]).
 ccg([ruleT], [ruleA, ruleB, ruleBx]).
 cg([], [ruleA]).
 
