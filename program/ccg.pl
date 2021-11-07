@@ -5,43 +5,52 @@
 :- if(current_prolog_flag(dialect, swi)).
 iparse5(Grammar, N, XS, T) :-
   first_solution(T, [
+    iparse1(Grammar, N, XS, T),
     iparse2(Grammar, N, XS, T),
     iparse3(Grammar, N, XS, T),
     iparse4(Grammar, N, XS, T)
   ], []).
+
+:- table iparse6/4.
+iparse6(_, _, [T], T) :-
+  acyclic_term(T).
+iparse6(Grammar, N, L, T) :-
+  call(Grammar, Rule1, Rule2),
+  append(XS, [X], L),
+  iparse6(Grammar, N, XS, S),
+  between(0, N, I),
+  unary(I, S, A, Rule1),
+  between(0, N, J),
+  unary(J, X, B, Rule1),
+  binary(A, B, T, Rule2).
+
 :- endif.
 
 iparse4(_, _, [T], T) :-
   acyclic_term(T).
-iparse4(Grammar, N, [X, Y|XS], T) :-
+iparse4(Grammar, N, L, T) :-
   call(Grammar, Rule1, Rule2),
-  between(0, N, I_),
-  I is N - I_,
-  between(0, I, P),
-  unary(P, X, A, Rule1),
+  between(0, N, I),
   M is N - I,
-  between(0, M, J_),
-  J is M - J_,
-  between(0, J, Q),
-  unary(Q, Y, B, Rule1),
+  between(0, M, J),
   K is M - J,
-  binary(A, B, C, Rule2),
-  iparse4(Grammar, K, [C|XS], T).
+  append(XS, [X], L),
+  iparse4(Grammar, K, XS, S),
+  unary(I, S, A, Rule1),
+  unary(J, X, B, Rule1),
+  binary(A, B, T, Rule2).
 
 iparse3(_, _, [T], T) :-
   acyclic_term(T).
-iparse3(Grammar, N, [X, Y|XS], T) :-
+iparse3(Grammar, N, L, T) :-
   call(Grammar, Rule1, Rule2),
-  between(0, N, I_),
-  I is N - I_,
-  unary(I, X, A, Rule1),
-  M is N - I,
-  between(0, M, J_),
-  J is M - J_,
-  unary(J, Y, B, Rule1),
-  K is M - J,
-  binary(A, B, C, Rule2),
-  iparse3(Grammar, K, [C|XS], T).
+  between(0, N, I),
+  between(0, N, J),
+  append(XS, [X], L),
+  iparse3(Grammar, N, XS, S),
+  unary(I, S, A, Rule1),
+  unary(J, X, B, Rule1),
+  binary(A, B, T, Rule2).
 
 iparse2(_, _, [T], T) :-
   acyclic_term(T).
